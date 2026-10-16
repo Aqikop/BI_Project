@@ -1,0 +1,20 @@
+# Requirements for association_rule_mining.ipynb (Topic 3: Product and Association Rules)
+# Python 3.10 - 3.12 recommended.
+# Install:  pip install -r requirements.txt
+# Also needed (not a pip package): a "Microsoft ODBC Driver 17 or 18 for SQL Server" on the machine.
+
+# Data handling and plotting
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+
+# Association rule mining (FP-Growth, association_rules)
+mlxtend>=0.22
+
+# SQL Server connection (the notebook uses SQLAlchemy 2.x style calls)
+sqlalchemy>=2.0
+pyodbc>=5.0
+
+# Running the notebook
+jupyterlab>=4.0
+ipykernel>=6.0
