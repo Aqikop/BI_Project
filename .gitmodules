@@ -1,0 +1,3 @@
+[submodule "CompanyX_ETL"]
+	path = CompanyX_ETL
+	url = https://github.com/Aqikop/CompanyX_ETL.git
