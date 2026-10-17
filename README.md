@@ -35,6 +35,7 @@ resulting rules back to the warehouse.
 | [`association_rule_mining/association_rule_mining.ipynb`](./association_rule_mining/association_rule_mining.ipynb) | Connects to `CompanyX_DW`, mines Individual and Reseller rules, and writes them to `AssociationRulesFact`. |
 | [`association_rule_mining/requirements.txt`](./association_rule_mining/requirements.txt) | Python dependencies for the notebook. |
 | [`association_rule_mining/association_rule_mining_results.md`](./association_rule_mining/association_rule_mining_results.md) | Example results and interpretation from a completed run. |
+| [`CompanyX_ETL/`](./CompanyX_ETL) | Git submodule containing the Visual Studio SSIS ETL project. |
 
 ## Prerequisites
 
@@ -90,20 +91,64 @@ after each load, especially the prerequisites noted at the top of
 
 ### SSIS load
 
-The repository contains the SQL and source-query definitions used by the
-SSIS project; the Visual Studio project itself is not included here. In the
-SSIS project, configure connections to `CompanyX` and `CompanyX_DW`, then
-create or use these packages:
+The [`CompanyX_ETL/`](./CompanyX_ETL) directory is a Git submodule containing
+the Visual Studio SSIS project. It loads the source database into
+`CompanyX_DW`. Configure connections to `CompanyX` and `CompanyX_DW`, then
+use these packages:
 
 1. `LoadProductDim`
 2. `LoadCustomerDim`
 3. `LoadOrderLineFact`
 4. `MasterLoad`, which runs the three packages in that order
 
+Open `CompanyX_ETL.slnx` or `CompanyX_ETL.dtproj` in Visual Studio with the
+SQL Server Integration Services Projects extension installed. The packages
+currently use Windows integrated authentication and default to a SQL Server
+instance named `localhost`; change the connection managers if your instance
+uses a different server or instance name.
+
+Run `MasterLoad.dtsx` for the complete ETL process. It runs the dimension
+loads before the fact load and advances the replay watermark only after the
+preceding packages succeed. For package-level setup, validation, replay
+instructions, and troubleshooting, see the
+[`CompanyX_ETL/README.md`](./CompanyX_ETL/README.md).
+
 The staging tables are truncated and reloaded for each package. The product
 dimension uses SCD Type 2 behavior, the customer dimension uses SCD Type 1
 behavior, and the fact load resolves the correct product-dimension version
 for the order date.
+
+### Clone and initialize the submodule
+
+Clone the complete project with:
+
+```powershell
+git clone --recurse-submodules <main-repository-url>
+```
+
+If the main repository is already cloned, initialize the submodule with:
+
+```powershell
+git submodule update --init --recursive
+```
+
+The parent repository stores the submodule commit reference. Changes to the
+SSIS project must be committed and pushed in the `CompanyX_ETL` repository
+first, then the updated submodule pointer must be committed and pushed in
+this repository:
+
+```powershell
+cd D:\BI_mining\CompanyX_ETL
+git add README.md
+git commit -m "Update ETL documentation"
+git push origin main
+
+cd D:\BI_mining
+git -C .\CompanyX_ETL pull --ff-only origin main
+git add .\CompanyX_ETL
+git commit -m "Update CompanyX_ETL submodule"
+git push origin main
+```
 
 ## 2. Optional: run the date-window replay
 
