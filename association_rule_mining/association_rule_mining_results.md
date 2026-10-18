@@ -150,17 +150,113 @@ Base case: 5% of reachable orders add the offered model, with a 10% discount on 
 | Mountain Tire Tube → LL Mountain Tire | 2,584 → **869** (66% removed) | +514 → **−613** | 3.5% → **10.4%** |
 | Road-750 → Road Bottle Cage | 878 → 878 (0% removed) | −290 → −290 | 12.0% → 12.0% |
 
-- For the tyre offer, the alternatives excluded include ML Mountain Tire, HL Mountain Tire and LL Road Tire (the notebook prints the full list).
+- For the tyre offer, the excluded models are ML Mountain Tire, HL Mountain Tire, LL Road Tire, ML Road Tire, HL Road Tire, Touring Tire, Road Tire Tube and Touring Tire Tube. The last two are not alternatives in the strict sense: a customer holding road or touring gear is unlikely to want a mountain tyre, so they are better described as competing or incompatible items. This makes 869 a **conservative (lower) bound**: the true reach for this offer lies between 869 and 2,584.
 - Road-750 → Road Bottle Cage has one alternative, Mountain Bottle Cage, and no Road-750 order without the Road Bottle Cage holds it, so its reach is unchanged.
 - **The earlier +514 is withdrawn.** It rested on tube buyers who already held another tyre.
 
-**No-discount result (unchanged, Road-750 → Road Bottle Cage):** net profit +99, +247 and +494 at 2%, 5% and 10% conversion. Without a discount a suggestion cannot lose money on its own, because the only cost is the missed margin on sales that would have happened anyway, which is zero.
+**Why a no-discount suggestion cannot lose money on its own:** it gives nothing away on the sales that would have happened anyway, so profit is the extra sales times their margin. A discount is what creates the loss, because it is also given to customers who already buy both items.
 
 **All 15 candidates re-ranked on the refined reach** (5% conversion, 10% discount): none is profitable. The least negative is LL Road Tire → Road Tire Tube (−167, break-even 21.5%), followed by LL Mountain Tire → Mountain Tire Tube (−186, 23.5%). Touring Tire → Touring Tire Tube (break-even 120.1%) and Road Bottle Cage → Water Bottle (153.0%) cannot pay off at a 10% discount, because almost every trigger order already contains the offer.
 
-*Pending:* the refined net profit grid for discounts of 0%, 5% and 10% (printed by notebook section 8b). It will show whether a small discount of about 5% or less can work for the tyre offer.
+**Refined net profit grids** (notebook section 8b)
+
+Mountain Tire Tube → LL Mountain Tire, refined reach 869:
+
+| Discount | Low (2%) | Base (5%) | High (10%) | Break-even conversion |
+|---|---|---|---|---|
+| 0% | +272 | **+680** | +1,359 | none needed |
+| 5% | −342 | +33 | +659 | 4.7% |
+| 10% | −956 | −613 | −42 | 10.4% |
+
+Road-750 → Road Bottle Cage, reach 878:
+
+| Discount | Low (2%) | Base (5%) | High (10%) | Break-even conversion |
+|---|---|---|---|---|
+| 0% | +99 | **+247** | +494 | none needed |
+| 5% | −158 | −22 | +206 | 5.5% |
+| 10% | −415 | −290 | −83 | 12.0% |
+
+**Reading**
+- **Without a discount both offers are profitable at every conversion scenario.** The tyre offer is worth about 2.75 times the cage offer (+680 against +247 at 5% conversion) even on its conservative reach.
+- **A 5% discount is marginal for the tyre offer** (+33 at 5% conversion, break-even 4.7%) and loses money for the cage offer at base conversion. **A 10% discount does not pay for either offer** at the base or low scenarios.
+- The tyre offer is judgement-dependent (the reach depends on which items count as competing), while the cage offer is not.
+- The data does not say which tyre grade to suggest: LL, ML and HL Mountain Tire compete for the same 869 orders, and the higher-margin grades may convert less often.
 
 **Use of the 869 reachable orders.** Several tyre offers (LL, ML or HL Mountain Tire) share the same group of tube buyers who hold no tyre, and they compete with each other, so these rules describe one pool of customers, not three separate opportunities.
+
+---
+
+## 6a. Use-case comparison (Current)
+
+Notebook section 13. Individual customers, conversion 5%, reach = refined reach (excluding customers who already hold an alternative to the offer). Net profit is in the source currency. A discount is applied to the offered item only. Conversion is held constant across discounts, so with no discount a suggestion always earns the most; a discount only pays if it lifts conversion.
+
+| Rule | Categories | Lift train → test | Reseller lift | Reach before → after | Offer revenue / margin | Net profit at 0% / 5% / 10% discount | Break-even at 5% / 10% discount |
+|---|---|---|---|---|---|---|---|
+| Water Bottle → Hydration Pack | Accessories | 2.07 → 2.06 | 8.10 | 3,913 → 3,913 | 54.99 / 34.42 | +6,735 / +5,416 / +4,097 | 0.6% / 1.4% |
+| Cycling Cap → Short-Sleeve Classic Jersey | Clothing | 2.19 → 2.13 | 2.40 | 1,829 → 1,557 | 53.99 / 12.42 | +967 / −150 / −1,268 | 6.0% / 16.6% |
+| Patch kit → Bike Wash | Accessories | 2.06 → 2.26 | 7.27 | 2,880 → 2,880 | 7.95 / 4.98 | +717 / +549 / +382 | 0.8% / 1.8% |
+| Mountain Tire Tube → LL Mountain Tire | Accessories | 3.84 → 4.13 | not in reseller rules | 2,584 → 869 | 24.99 / 15.64 | +680 / +33 / −613 | 4.7% / 10.4% |
+| Road-750 → Road Bottle Cage | Bikes → Accessories | 5.10 → 4.96 | not in reseller rules | 878 → 878 | 8.99 / 5.63 | +247 / −22 / −290 | 5.5% / 12.0% |
+| Short-Sleeve Classic Jersey → Cycling Cap | Clothing | 2.19 → 2.13 | 2.40 | 1,246 → 1,246 | 8.99 / 2.07 | +129 / −50 / −229 | 7.5% / 20.7% |
+| Hydration Pack → Water Bottle | Accessories | 2.07 → 2.06 | 8.10 | 438 → 438 | 4.99 / 3.12 | +68 / −8 / −84 | 5.6% / 12.3% |
+| Bike Wash → Patch kit | Accessories | 2.06 → 2.26 | 7.27 | 620 → 620 | 2.29 / 1.43 | +44 / +9 / −26 | 3.9% / 8.5% |
+| Touring-1000 → Sport-100 | Bikes → Accessories | 1.59 → 1.44 | 0.88 | 697 → 697 | 34.99 / 21.90 | +763 / −244 / −1,252 | 6.7% / 14.8% |
+
+All nine rules are Under-promoted pairs. All hold in the 2014 test except Touring-1000 → Sport-100.
+
+**Direction matters.** The same pair gives very different value in each direction: Water Bottle → Hydration Pack is worth +6,735, but Hydration Pack → Water Bottle only +68, because the offered item is cheap and the reach is small. Offer the higher-value item to buyers of the common one.
+
+---
+
+## 6b. Recommended use cases (draft, to be confirmed by the team)
+
+The lecturer asked for at least three use cases. Chosen for evidence and for variety of category and action:
+
+| # | Rule | Type of action | Net profit, no discount (5% conversion) | Why |
+|---|---|---|---|---|
+| 1 | Water Bottle → Hydration Pack | Accessory upsell | +6,735 | Largest value; stable lift (2.07 → 2.06); strong in both channels (reseller lift 8.10); large reach |
+| 2 | Cycling Cap → Short-Sleeve Classic Jersey | Clothing cross-sell | +967 | Second largest; holds in 2014; strong in both channels (reseller lift 2.40); thin margin, so no discount |
+| 3 | Mountain Tire Tube → LL Mountain Tire | Maintenance complement | +680 (on a conservative reach) | Lift stable (3.84 → 4.13); a discount of 5% roughly breaks even (+33, break-even 4.7%) |
+| 4 (extra) | Road-750 → Road Bottle Cage | Bike with an accessory | +247 | Reach unaffected by the refinement; lift stable (5.10 → 4.96) |
+| Rejected | Touring-1000 → Sport-100 | Do not act | — | Lift falls from 1.59 to 1.44 in 2014, reverses for resellers (0.88); shows the validation stopping a weak promotion |
+
+### Use case 1: Water Bottle → Hydration Pack
+
+- **Offer:** a Hydration Pack (average revenue 54.99, margin 34.42) to customers who buy a water bottle but not a hydration pack.
+- **Evidence:** 284 orders already contain both, out of about 4,197 water-bottle orders (roughly 7%). Lift is 2.07 in training and 2.06 in 2014, so it is stable; the pair also appears in the reseller run (lift 8.10).
+- **Reach:** 3,913 orders; no alternatives to exclude.
+- **Sizing at 5% conversion:** +6,735 with no discount, +5,416 at a 5% discount and +4,097 at 10%. Break-even conversion is 0.6% at a 5% discount and 1.4% at 10%.
+- **Caution:** a 5% conversion would nearly double the current take-up (about 7%), so treat it as an optimistic case and show the 2% scenario next to it (about +2,700 with no discount, calculated from the reach and margin above; confirm in the notebook grid).
+- **Action:** suggest at checkout without a discount. The large margin leaves room for a small discount, but the data cannot show whether a discount raises conversion.
+
+### Use case 2: Cycling Cap → Short-Sleeve Classic Jersey
+
+- **Offer:** a jersey (revenue 53.99, margin 12.42) to cap buyers.
+- **Evidence:** 336 orders contain both; lift 2.19 in training and 2.13 in 2014; the reseller lift is 2.40, so the pair is robust across channels.
+- **Reach:** 1,829 orders, reduced to 1,557 after excluding customers who already hold another jersey.
+- **Sizing at 5% conversion:** +967 with no discount; −150 at a 5% discount (break-even 6.0%) and −1,268 at 10% (16.6%). The margin is only about 23%, so a discount quickly removes the profit.
+- **Action:** suggest without a discount. The reverse direction (jersey to cap) is worth only +129.
+
+### Use case 3: Mountain Tire Tube → LL Mountain Tire
+
+- **Offer:** a mountain tyre (revenue 24.99, margin 15.64) to tube buyers who hold no other tyre.
+- **Evidence:** 474 orders contain both; lift 3.84 in training and 4.13 in 2014. The pair is not in the reseller rules, so it is individual-specific.
+- **Reach:** 869 on a conservative basis (excluding customers holding another tyre or road gear); the true reach lies between 869 and 2,584.
+- **Sizing at 5% conversion:** +680 with no discount, +33 at a 5% discount (break-even 4.7%), −613 at 10% (break-even 10.4%).
+- **Action:** suggest without a discount, or at most a 5% discount. The data does not say which tyre grade to suggest, because LL, ML and HL compete for the same customers.
+
+### Use case 4 (extra): Road-750 → Road Bottle Cage
+
+- **Offer:** a bottle cage (revenue 8.99, margin 5.63) to buyers of the Road-750 bike.
+- **Evidence:** 554 orders contain both; lift 5.10 in training and 4.96 in 2014.
+- **Reach:** 878, unaffected by the refinement. Sizing at 5% conversion: +247 with no discount, −22 at 5% (break-even 5.5%), −290 at 10% (12.0%).
+- **Action:** suggest at the bike purchase without a discount. The value is small because the cage is a low-priced item.
+
+### Rejected rule: Touring-1000 → Sport-100
+
+Lift of 1.59 in training falls to 1.44 in 2014, below the 1.5 threshold, and resellers show 0.88, below chance. The no-discount value looks positive (+763) but the evidence does not support acting on it, and a discount loses money (−244 at 5%, −1,252 at 10%). Include it in the report as an example of validation preventing a weak promotion.
+
+**Caveats for all use cases:** conversion and discount are assumptions; the data cannot show whether a discount raises conversion; association is not causation; the real test would be a pilot with a control group.
 
 ---
 
@@ -301,7 +397,7 @@ The quarterly index and lift results were dominated by the 2013 launch of access
 - The individual analysis covers about 13 months after launch (training about seven months), not the full dataset. Accessory and clothing rules are only as reliable as that history.
 - Association is co-occurrence, not causation.
 - Conversion rates and discounts are assumptions. The real test is a pilot with a control group.
-- Reachable orders for tyre and tube offers were reduced by excluding customers who already hold an alternative. The alternatives are found from the baskets with a cut-off (lift below 0.8, at least 30 orders), which is a judgement, and the conversion rate remains an assumption.
+- Reachable orders for tyre and tube offers were reduced by excluding customers who already hold an alternative. The alternatives are found from the baskets with a cut-off (lift below 0.8, at least 30 orders), which is a judgement, and the conversion rate remains an assumption. For the tyre offer the true reach lies between 869 and 2,584, so the break-even at a 10% discount lies between 3.5% and 10.4%.
 - The pattern cut-offs (lift 1.5, support 5%) are the team's own definitions and should be checked with the lecturer.
 - Labels describe what customers do together, not whether an offer will pay. Profit depends on the break-even check.
 - Cancelled orders are excluded from the warehouse (shipped-only load, provisional).
@@ -313,7 +409,7 @@ The quarterly index and lift results were dominated by the 2013 launch of access
 
 ## 15. Open items
 
-1. Rerun notebook section 8b to print the refined net profit grid by discount, add it to section 6, and choose the use-case rule (the no-discount Road-750 → Road Bottle Cage offer is the most robust so far).
+1. Confirm the use-case set in section 6b (Water Bottle → Hydration Pack, Cycling Cap → Short-Sleeve Classic Jersey, Mountain Tire Tube → LL Mountain Tire, plus Road-750 → Road Bottle Cage and the rejected Touring-1000 → Sport-100), and print the 2% and 10% conversion grids for the first two in the notebook.
 2. Check reseller category start dates (`CustomerType = 'Reseller'`) before treating the reseller base as clean.
 3. Apply the reporting view (`07_reporting_view.sql`) so Power BI reads the plain names. Done: the view returns 2,962 rows, matching the table.
 4. Choose the use-case rule after the economics rerun.
