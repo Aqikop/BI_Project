@@ -3,7 +3,17 @@
 
 Notebook: `association_rule_mining.ipynb`, run on the warehouse `CompanyX_DW`.
 
-**Status key:** *Current* = from the corrected run (individual analysis from 2013-05-30). *Pending rerun* = figures from the earlier run, superseded by the launch-date correction; refresh them before they go in the report.
+**Mining stage: complete.** Every section below is *Current*, meaning it comes from the corrected run (individual analysis from 2013-05-30, reseller analysis on all orders). The seasonality section is an appendix and is not used in the conclusions.
+
+| Mining-stage item | Status |
+|---|---|
+| Rules mined and stored in `dw.AssociationRulesFact` (126 individual, 2,836 reseller; 2,962 rows) | Done |
+| Plain-label reporting view `rpt.AssociationRules` | Done |
+| Validation: time split, June check, sensitivity grid, channel comparison | Done |
+| Launch-date correction of the individual support base | Done |
+| Reseller base check (category level, and model level for the use-case models) | Done |
+| Use cases: three recommended, one extra, one rejected, with sizing grids | Done and confirmed by the team |
+| Open: report write-up, lecturer check of the pattern definitions, Power BI | Next stage |
 
 ---
 
@@ -208,7 +218,7 @@ All nine rules are Under-promoted pairs. All hold in the 2014 test except Tourin
 
 ---
 
-## 6b. Recommended use cases (draft, to be confirmed by the team)
+## 6b. Use cases (confirmed by the team)
 
 The lecturer asked for at least three use cases. Chosen for evidence and for variety of category and action:
 
@@ -226,15 +236,31 @@ The lecturer asked for at least three use cases. Chosen for evidence and for var
 - **Evidence:** 284 orders already contain both, out of about 4,197 water-bottle orders (roughly 7%). Lift is 2.07 in training and 2.06 in 2014, so it is stable; the pair also appears in the reseller run (lift 8.10).
 - **Reach:** 3,913 orders; no alternatives to exclude.
 - **Sizing at 5% conversion:** +6,735 with no discount, +5,416 at a 5% discount and +4,097 at 10%. Break-even conversion is 0.6% at a 5% discount and 1.4% at 10%.
-- **Caution:** a 5% conversion would nearly double the current take-up (about 7%), so treat it as an optimistic case and show the 2% scenario next to it (about +2,700 with no discount, calculated from the reach and margin above; confirm in the notebook grid).
+- **Caution:** a 5% conversion would nearly double the current take-up (about 7%), so treat 5% as an optimistic case and read the 2% column beside it. The result stays positive in every scenario.
+
+| Discount | Low (2%) | Base (5%) | High (10%) |
+|---|---|---|---|
+| 0% | +2,694 | +6,735 | +13,470 |
+| 5% | +1,698 | +5,416 | +11,613 |
+| 10% | +702 | +4,097 | +9,757 |
+
+Break-even conversion: 0.6% at a 5% discount and 1.4% at 10%.
 - **Action:** suggest at checkout without a discount. The large margin leaves room for a small discount, but the data cannot show whether a discount raises conversion.
 
 ### Use case 2: Cycling Cap → Short-Sleeve Classic Jersey
 
 - **Offer:** a jersey (revenue 53.99, margin 12.42) to cap buyers.
 - **Evidence:** 336 orders contain both; lift 2.19 in training and 2.13 in 2014; the reseller lift is 2.40, so the pair is robust across channels.
-- **Reach:** 1,829 orders, reduced to 1,557 after excluding customers who already hold another jersey.
-- **Sizing at 5% conversion:** +967 with no discount; −150 at a 5% discount (break-even 6.0%) and −1,268 at 10% (16.6%). The margin is only about 23%, so a discount quickly removes the profit.
+- **Reach:** 1,829 orders, reduced to 1,557 (15% removed) after excluding customers who already hold another jersey (the Long-Sleeve Logo Jersey).
+- **Sizing:** the margin is only about 23%, so a discount quickly removes the profit.
+
+| Discount | Low (2%) | Base (5%) | High (10%) |
+|---|---|---|---|
+| 0% | +387 | +967 | +1,933 |
+| 5% | −604 | −150 | +606 |
+| 10% | −1,596 | −1,268 | −721 |
+
+Break-even conversion: 6.0% at a 5% discount and 16.6% at 10%.
 - **Action:** suggest without a discount. The reverse direction (jersey to cap) is worth only +129.
 
 ### Use case 3: Mountain Tire Tube → LL Mountain Tire
@@ -403,16 +429,19 @@ The quarterly index and lift results were dominated by the 2013 launch of access
 - Cancelled orders are excluded from the warehouse (shipped-only load, provisional).
 - Seasonality and holidays are not modelled.
 - The time split is one split (training to 2013, test on the first half of 2014).
-- The reseller support base has not yet been checked for product launch dates.
+- Reseller product launch dates were checked at category level (all four categories first sold to resellers on 2011-05-31) and at model level for the models in the use cases (first sales reported as 2011-05-31 and 2011-05-30, at the start of the data). The reseller base is therefore not diluted the way the individual base was. The warehouse's earliest order date is 2011-05-31, so confirm the 2011-05-30 value before quoting it; the conclusion does not depend on it.
 
 ---
 
 ## 15. Open items
 
-1. Confirm the use-case set in section 6b (Water Bottle → Hydration Pack, Cycling Cap → Short-Sleeve Classic Jersey, Mountain Tire Tube → LL Mountain Tire, plus Road-750 → Road Bottle Cage and the rejected Touring-1000 → Sport-100), and print the 2% and 10% conversion grids for the first two in the notebook.
-2. Check reseller category start dates (`CustomerType = 'Reseller'`) before treating the reseller base as clean.
-3. Apply the reporting view (`07_reporting_view.sql`) so Power BI reads the plain names. Done: the view returns 2,962 rows, matching the table.
-4. Choose the use-case rule after the economics rerun.
-5. Decide whether tyre and tube pairs are natural bundles or trivial rules for the report.
-6. Check the pattern definitions with the lecturer.
-7. Build the Power BI pages: rules (slicers for channel, pattern, lift, confidence), sales and basket pages, and the use-case page.
+The mining stage is complete. Remaining items belong to the next stage.
+
+1. Write the use cases into the report using the structure in section 6b: rule, evidence, reach, sizing, action, caveat.
+2. Confirm the reseller model-level first-sale date reported as 2011-05-30 (the warehouse's earliest order date is 2011-05-31).
+3. Decide whether tyre and tube pairs are natural bundles or trivial rules for the report.
+4. Check the pattern definitions and cut-offs (lift 1.5, support 5%) with the lecturer.
+5. Build the Power BI pages on `rpt.AssociationRules` and the star schema: sales overview, basket page, rules page (slicers for channel, pattern, lift, confidence) and the use-case page with adjustable conversion and discount.
+6. Optional: run mining once on all orders (including cancelled) as a sensitivity test.
+
+Closed during the mining stage: launch-date correction, reseller base check, tyre-and-tube reach refinement, reporting view, use-case selection.

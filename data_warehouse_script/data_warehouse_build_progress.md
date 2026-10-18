@@ -16,8 +16,10 @@ Status as of 2026-10-13. Everything below was run and checked by the team unless
 | Replay (near-real-time simulation) | Done, verified against the one-shot load |
 | Transformations visible in the SSIS data flows | Done, verified (section 5a) |
 | Scheduling (SQL Server Agent) | Done: project deployed to `SSISDB`, Agent job on a 1-minute schedule ran the replay to completion (section 7a) |
-| Association rule mining into `AssociationRulesFact` | *Not yet* |
-| Power BI dashboard and use case | *Not yet* |
+| Association rule mining into `AssociationRulesFact` | Done: 126 individual and 2,836 reseller rules stored (section 7b; details in `association_rule_mining_results.md`) |
+| Reporting view `rpt.AssociationRules` with plain labels | Done |
+| Use cases (three recommended, one extra, one rejected) | Done and confirmed by the team |
+| Power BI dashboard | *Not yet* |
 
 ---
 
@@ -192,6 +194,19 @@ The match with the one-shot load is the main evidence that the incremental logic
 
 ---
 
+## 7b. Mining stage (summary)
+
+Full results, tables and caveats are in `association_rule_mining_results.md`; the code is `association_rule_mining.ipynb`.
+
+- **Method:** FP-Growth pair rules at Product Model level, minimum support 1%, from shipped orders with `OrderQty > 0 AND UnitPrice > 0`. Individual run is the main analysis (from 2013-05-30, 22,008 orders); the reseller run (3,762 orders) is a comparison. Single-model orders stay in the support base.
+- **Stored rules:** 126 individual and 2,836 reseller (2,962 rows in `dw.AssociationRulesFact`). The reporting view `rpt.AssociationRules` shows the plain labels (Bought together, Under-promoted pair, Popular by coincidence, Weak link, Alternatives) and plain column names; the table keeps the brief's labels.
+- **Validation:** time split (train 2013-05-30 to 2013-12-31, test Jan to Jun 2014): 62 of 68 strong rules hold, median lift ratio 1.00, rank correlation 0.98; June 2014 check leaves the holding set unchanged; sensitivity grid supports the 1% threshold; 22 pairs are strong in both channels.
+- **Use cases:** Water Bottle → Hydration Pack (+6,735 at 5% conversion, no discount), Cycling Cap → Short-Sleeve Classic Jersey (+967), Mountain Tire Tube → LL Mountain Tire (+680 on a conservative reach), extra Road-750 → Road Bottle Cage (+247), and the rejected Touring-1000 → Sport-100 (lift 1.59 falls to 1.44 in 2014). Conversion and discount are assumptions; a discount never beats no discount at equal conversion.
+- **Checks on the reseller base:** all four categories first sold to resellers on 2011-05-31, and the use-case models were checked at model level (first sales reported as 2011-05-31 and 2011-05-30; the earliest order date in the warehouse is 2011-05-31, so confirm the latter).
+- **Seasonality:** tested as a light check and moved to an appendix; seasonal timing of offers is a limitation.
+
+---
+
 ## 8. Issues found and how they were resolved
 
 | Issue | Resolution |
@@ -206,6 +221,10 @@ The match with the one-shot load is the main evidence that the incremental logic
 | Shipped revenue (108.73M) below the 109.8M quoted in Section 2.2 | Cancelled orders (315) are excluded under the shipped-only load rule |
 | After the first weekly replay run, no product had a current version (62 closed, 0 current) | As-of artifact: every first-period version ends on 2012-05-29, the clock date, while its successor starts 2012-05-30. **Fixed:** the `ProductDim` source query now uses `lp.EndDate >= w.ToDate` instead of `>` (two places), so a version closes on the day its successor appears. Replay tests T1 to T7 were rerun after the fix and the first weekly run now shows 62 / 62 / 0 |
 | Package file named `MaterLoad.dtsx` | Cosmetic typo; renamed to `MasterLoad.dtsx` |
+| Test/train lift ratio of 0.68 read as regression to the mean | Denominator artefact: individual customers could not buy accessories or clothing before 2013-05-30, yet 5,374 earlier orders were in the support base (16,363 training orders vs 10,989 after launch; 1 ÷ 1.49 ≈ 0.67). Fixed by starting the individual analysis on 2013-05-30; the ratio is now 1.00 |
+| Mining notebook reconciled to a hard-coded 17,805 | The figure belonged to the old base; replaced by an independent count inside SQL |
+| Net profit of +514 for the tyre bundle | Reach was overstated (customers already holding another tyre were counted); refined reach 869 gives −613 at a 10% discount, so the bundle was replaced as primary use case |
+| Seasonal indices dominated by the accessory launch | Quarterly zeros were the 2013-05-30 launch, not seasons; section kept as an appendix and seasonality listed as a limitation |
 
 ---
 
@@ -214,25 +233,23 @@ The match with the one-shot load is the main evidence that the incremental logic
 **Warehouse and ETL**
 - Disable the Agent job `CompanyX_DW_Replay_test` now that the replay is complete (it still runs every minute and loads nothing).
 - Optional, for a live demo or screenshots: reset and replay with a 7- or 30-day window, so the clock moves in small steps instead of the 358-day windows used in the scheduled run.
-- Optional: run mining once on all orders (not only shipped) as a sensitivity test, and report whether the top rules change.
 
 **Documentation to update**
 - Correct Section 2.2 of the project report: the anomalous lines are 75 lines in six orders (43677 to 43682), not five orders; order 43681 has 21 anomalous lines.
-- Section 2.1 and the all-orders figures in Section 2.3 and Q22/Q23/Q27 still use all orders; update them to the shipped-only numbers (27,382 individual orders, 3,768 reseller orders, 17,805 individual multi-model orders, 120,147 lines).
+- Section 2.1 and the all-orders figures in Section 2.3 and Q22/Q23/Q27 still use all orders; update them to the shipped-only numbers (27,382 individual orders, 3,768 reseller orders, 120,147 lines). The individual analysis base is now 22,008 orders from 2013-05-30.
 - Reword Section 2.5 so its objective labels match the brief's four sections.
-- Describe June 2014 and the partial years (2011, 2014) as atypical in trend visuals; handled by hand in Power BI.
+- Describe June 2014, the partial years (2011, 2014) and the 2013-05-30 launch of accessories and clothing as context in trend visuals; handled by hand in Power BI.
 
 **Decisions still with the team or lecturer**
-- The shipped-only load scope is provisional (keep cancelled orders or not).
-- The five `RuleClassification` types and their cutoffs are the team's own definitions; check with the lecturer.
+- The shipped-only load scope is provisional (keep cancelled orders or not); optional sensitivity run on all orders.
+- The five pattern types and their cut-offs are the team's own definitions; check with the lecturer.
 - Whether to add a list-price-at-order measure to `OrderLineFact` (recommendation: skip).
-- Seasonality in the rules (no date or season scope in `AssociationRulesFact`).
+- Confirm the reseller model-level first-sale date reported as 2011-05-30 (the warehouse's earliest order date is 2011-05-31).
 
 ---
 
 ## 10. Next steps
 
-1. Run the scheduled replay with the intended window size and disable the job when the clock reaches 2014-06-30.
-2. Build the mining notebook: read the `(SalesOrderID, ProductModelID)` pairs from the warehouse (individual shipped orders, lines with `OrderQty > 0 AND UnitPrice > 0`, single-model orders kept in the support total), run Apriori or FP-Growth, apply the brief's thresholds, classify rules, and write them to `AssociationRulesFact`.
-3. Build the Power BI dashboard (sales and basket pages, rules page with slicers, optional network graph) and the use-case page that joins a chosen rule back to `OrderLineFact`.
-4. Write up the report sections: warehouse design, ETL and replay, verification, and the limitations above.
+1. Disable the replay job (the warehouse build is complete and verified).
+2. Build the Power BI model on the star schema and `rpt.AssociationRules`: sales overview, basket page, rules page with slicers, and the use-case page with adjustable conversion and discount.
+3. Write the report sections: warehouse design, ETL and replay, mining method and validation, the use cases, and the limitations above.
