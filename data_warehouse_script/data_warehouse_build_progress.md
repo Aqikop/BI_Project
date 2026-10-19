@@ -16,7 +16,7 @@ Status as of 2026-10-13. Everything below was run and checked by the team unless
 | Replay (near-real-time simulation) | Done, verified against the one-shot load |
 | Transformations visible in the SSIS data flows | Done, verified (section 5a) |
 | Scheduling (SQL Server Agent) | Done: project deployed to `SSISDB`, Agent job on a 1-minute schedule ran the replay to completion (section 7a) |
-| Association rule mining into `AssociationRulesFact` | Done: 126 individual and 2,836 reseller rules stored (section 7b; details in `association_rule_mining_results.md`) |
+| Association rule mining into `AssociationRulesFact` | Done: 126 individual and 2,226 reseller rules stored (both channels from 2013-05-30) (section 7b; details in `association_rule_mining_results.md`) |
 | Reporting view `rpt.AssociationRules` with plain labels | Done |
 | Use cases (three recommended, one extra, one rejected) | Done and confirmed by the team |
 | Power BI dashboard | *Not yet* |
@@ -198,11 +198,11 @@ The match with the one-shot load is the main evidence that the incremental logic
 
 Full results, tables and caveats are in `association_rule_mining_results.md`; the code is `association_rule_mining.ipynb`.
 
-- **Method:** FP-Growth pair rules at Product Model level, minimum support 1%, from shipped orders with `OrderQty > 0 AND UnitPrice > 0`. Individual run is the main analysis (from 2013-05-30, 22,008 orders); the reseller run (3,762 orders) is a comparison. Single-model orders stay in the support base.
-- **Stored rules:** 126 individual and 2,836 reseller (2,962 rows in `dw.AssociationRulesFact`). The reporting view `rpt.AssociationRules` shows the plain labels (Bought together, Under-promoted pair, Popular by coincidence, Weak link, Alternatives) and plain column names; the table keeps the brief's labels.
+- **Method:** FP-Growth pair rules at Product Model level, minimum support 1%, from shipped orders with `OrderQty > 0 AND UnitPrice > 0`. Both channels use the window from 2013-05-30 (individual 22,008 orders; reseller 1,795 orders). Individual run is the main analysis; the reseller run uses the same window (1,795 orders from 2013-05-30) and is a comparison. Single-model orders stay in the support base.
+- **Stored rules:** 126 individual and 2,226 reseller, both restricted to 2013-05-30 (2,352 rows in `dw.AssociationRulesFact`). The unrestricted reseller run (2,836 rules) was superseded. The reporting view `rpt.AssociationRules` shows the plain labels (Bought together, Under-promoted pair, Popular by coincidence, Weak link, Alternatives) and plain column names; the table keeps the brief's labels.
 - **Validation:** time split (train 2013-05-30 to 2013-12-31, test Jan to Jun 2014): 62 of 68 strong rules hold, median lift ratio 1.00, rank correlation 0.98; June 2014 check leaves the holding set unchanged; sensitivity grid supports the 1% threshold; 22 pairs are strong in both channels.
 - **Use cases:** Water Bottle → Hydration Pack (+6,735 at 5% conversion, no discount), Cycling Cap → Short-Sleeve Classic Jersey (+967), Mountain Tire Tube → LL Mountain Tire (+680 on a conservative reach), extra Road-750 → Road Bottle Cage (+247), and the rejected Touring-1000 → Sport-100 (lift 1.59 falls to 1.44 in 2014). Conversion and discount are assumptions; a discount never beats no discount at equal conversion.
-- **Checks on the reseller base:** all four categories first sold to resellers on 2011-05-31, and the use-case models were checked at model level (first sales reported as 2011-05-31 and 2011-05-30; the earliest order date in the warehouse is 2011-05-31, so confirm the latter).
+- **Checks on the reseller base:** all four categories first sold to resellers on 2011-05-31. At model level, the use-case models first sold to resellers on 2011-05-31 or 2013-05-30. Five of the seven accessory and clothing models first sold to resellers on 2013-05-30 (Water Bottle, Hydration Pack, Bike Wash, Patch kit, Short-Sleeve Classic Jersey). The reseller lifts for Water Bottle / Hydration Pack, Patch kit / Bike Wash and Cycling Cap / Short-Sleeve Classic Jersey are inflated by pre-launch orders and need a restricted sensitivity check before they are quoted.
 - **Seasonality:** tested as a light check and moved to an appendix; seasonal timing of offers is a limitation.
 
 ---
@@ -221,6 +221,7 @@ Full results, tables and caveats are in `association_rule_mining_results.md`; th
 | Shipped revenue (108.73M) below the 109.8M quoted in Section 2.2 | Cancelled orders (315) are excluded under the shipped-only load rule |
 | After the first weekly replay run, no product had a current version (62 closed, 0 current) | As-of artifact: every first-period version ends on 2012-05-29, the clock date, while its successor starts 2012-05-30. **Fixed:** the `ProductDim` source query now uses `lp.EndDate >= w.ToDate` instead of `>` (two places), so a version closes on the day its successor appears. Replay tests T1 to T7 were rerun after the fix and the first weekly run now shows 62 / 62 / 0 |
 | Package file named `MaterLoad.dtsx` | Cosmetic typo; renamed to `MasterLoad.dtsx` |
+| Reseller support inflated by pre-launch orders | Five accessory and clothing models first sold to resellers on 2013-05-30, but the reseller run counted orders from 2011. Restricting both channels to 2013-05-30 lowered Water Bottle / Hydration Pack from 8.10 to 3.86 and Patch kit / Bike Wash from 7.27 to 3.47; the restricted base is now used for both channels |
 | Test/train lift ratio of 0.68 read as regression to the mean | Denominator artefact: individual customers could not buy accessories or clothing before 2013-05-30, yet 5,374 earlier orders were in the support base (16,363 training orders vs 10,989 after launch; 1 ÷ 1.49 ≈ 0.67). Fixed by starting the individual analysis on 2013-05-30; the ratio is now 1.00 |
 | Mining notebook reconciled to a hard-coded 17,805 | The figure belonged to the old base; replaced by an independent count inside SQL |
 | Net profit of +514 for the tyre bundle | Reach was overstated (customers already holding another tyre were counted); refined reach 869 gives −613 at a 10% discount, so the bundle was replaced as primary use case |
@@ -244,7 +245,7 @@ Full results, tables and caveats are in `association_rule_mining_results.md`; th
 - The shipped-only load scope is provisional (keep cancelled orders or not); optional sensitivity run on all orders.
 - The five pattern types and their cut-offs are the team's own definitions; check with the lecturer.
 - Whether to add a list-price-at-order measure to `OrderLineFact` (recommendation: skip).
-- Confirm the reseller model-level first-sale date reported as 2011-05-30 (the warehouse's earliest order date is 2011-05-31).
+- Identify the use-case model whose reseller sales start on 2013-05-30, and check its reseller lift with the base restricted to that date.
 
 ---
 

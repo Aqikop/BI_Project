@@ -7,7 +7,7 @@ Notebook: `association_rule_mining.ipynb`, run on the warehouse `CompanyX_DW`.
 
 | Mining-stage item | Status |
 |---|---|
-| Rules mined and stored in `dw.AssociationRulesFact` (126 individual, 2,836 reseller; 2,962 rows) | Done |
+| Rules mined and stored in `dw.AssociationRulesFact` (126 individual, 2,226 reseller, both from 2013-05-30; 2,352 rows; notebook rerun verified) | Done |
 | Plain-label reporting view `rpt.AssociationRules` | Done |
 | Validation: time split, June check, sensitivity grid, channel comparison | Done |
 | Launch-date correction of the individual support base | Done |
@@ -25,8 +25,8 @@ Notebook: `association_rule_mining.ipynb`, run on the warehouse `CompanyX_DW`.
 | Purchase filter | lines with `OrderQty > 0 AND UnitPrice > 0` (the 75 anomalous lines are excluded) |
 | Item | Product Model (`ProductModelID`) |
 | Algorithm | FP-Growth (`mlxtend`), pair rules only, minimum support 1% |
-| Analysis window | **Individual: from 2013-05-30** (accessories, clothing and new bike models first sold to individuals that day). **Reseller: all orders** |
-| Runs | Individual (main analysis) and Reseller (comparison only). No pooled run |
+| Analysis window | **Both channels: from 2013-05-30** (accessories, clothing and new bike models first sold that day to individuals, and the same models first sold to resellers that day). Earlier orders are excluded from the support base |
+| Runs | Individual (main analysis) and Reseller (comparison). Both channels use the same window from 2013-05-30. No pooled run |
 | Stored in | `dw.AssociationRulesFact` (both directions of each pair), labelled with the brief's pattern types |
 
 ---
@@ -47,19 +47,21 @@ Notebook: `association_rule_mining.ipynb`, run on the warehouse `CompanyX_DW`.
 | **Rules stored (both directions)** | **126** |
 | Max gap, count vs support × orders | 0.0 |
 
-### Reseller run (Current; the launch-date correction does not apply to it)
+### Reseller run (Current, restricted to 2013-05-30)
 
 | | Value |
 |---|---|
-| Orders in channel | 3,768 |
-| Orders with a valid line (support base) | 3,762 |
-| Orders with 2+ models | 3,025 |
-| Single-model orders | 737 |
-| Product models seen | 93 |
-| Frequent pairs | 1,418 |
-| **Rules stored (both directions)** | **2,836** |
+| Orders in channel since 2013-05-30 | 1,795 |
+| Orders with a valid line (support base) | 1,795 |
+| Orders with 2+ models | 1,475 |
+| Single-model orders | 320 |
+| Product models seen | 74 |
+| Frequent pairs | 1,113 |
+| **Rules stored (both directions)** | **2,226** |
 
-The reseller base is 3,762, not 3,768: the six orders 43677 to 43682 contain only anomalous lines, so they cannot form baskets.
+Change from the earlier, unrestricted reseller run (3,762 orders, 1,418 pairs, 2,836 rules), which is now superseded: about half the reseller orders fall outside the window. The restriction removes pre-launch orders in which several of these models could not appear, which had been depressing support and pulling many pairs down to Hidden gem.
+
+Before the window was applied, the reseller base was 3,762, not 3,768: the six orders 43677 to 43682 contain only anomalous lines, so they cannot form baskets.
 
 ---
 
@@ -69,14 +71,14 @@ The database keeps the brief's five labels. The report uses the plain labels bel
 
 | Brief label (stored) | Report label | Definition | Individual | Reseller |
 |---|---|---|---|---|
-| Bundle | **Bought together** | Lift 1.5 or more, support 5% or more | 4 | 506 |
-| Hidden gem | **Under-promoted pair** | Lift 1.5 or more, support 1% to 5% | 66 | 2,026 |
-| Chance | **Popular by coincidence** | Lift 1 to 1.5, support 5% or more | 2 | 30 |
-| Weak | **Weak link** | Lift 1 to 1.5, support 1% to 5% | 26 | 248 |
-| Substitute | **Alternatives** | Lift below 1 | 28 | 26 |
-| **Total** | | | **126** | **2,836** |
+| Bundle | **Bought together** | Lift 1.5 or more, support 5% or more | 4 | 980 |
+| Hidden gem | **Under-promoted pair** | Lift 1.5 or more, support 1% to 5% | 66 | 824 |
+| Chance | **Popular by coincidence** | Lift 1 to 1.5, support 5% or more | 2 | 194 |
+| Weak | **Weak link** | Lift 1 to 1.5, support 1% to 5% | 26 | 226 |
+| Substitute | **Alternatives** | Lift below 1 | 28 | 2 |
+| **Total** | | | **126** | **2,226** |
 
-The individual total rose from 106 to 126 after the launch correction, and Alternatives rose from 10 to 28.
+The individual total rose from 106 to 126 after the launch correction, and Alternatives rose from 10 to 28. The reseller total fell from 2,836 to 2,226 under the restricted window; Bundle rose from 506 to 980 and Hidden gem fell from 2,026 to 824.
 
 ---
 
@@ -202,15 +204,15 @@ Notebook section 13. Individual customers, conversion 5%, reach = refined reach 
 
 | Rule | Categories | Lift train → test | Reseller lift | Reach before → after | Offer revenue / margin | Net profit at 0% / 5% / 10% discount | Break-even at 5% / 10% discount |
 |---|---|---|---|---|---|---|---|
-| Water Bottle → Hydration Pack | Accessories | 2.07 → 2.06 | 8.10 | 3,913 → 3,913 | 54.99 / 34.42 | +6,735 / +5,416 / +4,097 | 0.6% / 1.4% |
-| Cycling Cap → Short-Sleeve Classic Jersey | Clothing | 2.19 → 2.13 | 2.40 | 1,829 → 1,557 | 53.99 / 12.42 | +967 / −150 / −1,268 | 6.0% / 16.6% |
-| Patch kit → Bike Wash | Accessories | 2.06 → 2.26 | 7.27 | 2,880 → 2,880 | 7.95 / 4.98 | +717 / +549 / +382 | 0.8% / 1.8% |
+| Water Bottle → Hydration Pack | Accessories | 2.07 → 2.06 | 3.86 (restricted; 8.10 full base) | 3,913 → 3,913 | 54.99 / 34.42 | +6,735 / +5,416 / +4,097 | 0.6% / 1.4% |
+| Cycling Cap → Short-Sleeve Classic Jersey | Clothing | 2.19 → 2.13 | 2.95 (restricted; 2.40 full base) | 1,829 → 1,557 | 53.99 / 12.42 | +967 / −150 / −1,268 | 6.0% / 16.6% |
+| Patch kit → Bike Wash | Accessories | 2.06 → 2.26 | 3.47 (restricted; 7.27 full base) | 2,880 → 2,880 | 7.95 / 4.98 | +717 / +549 / +382 | 0.8% / 1.8% |
 | Mountain Tire Tube → LL Mountain Tire | Accessories | 3.84 → 4.13 | not in reseller rules | 2,584 → 869 | 24.99 / 15.64 | +680 / +33 / −613 | 4.7% / 10.4% |
 | Road-750 → Road Bottle Cage | Bikes → Accessories | 5.10 → 4.96 | not in reseller rules | 878 → 878 | 8.99 / 5.63 | +247 / −22 / −290 | 5.5% / 12.0% |
-| Short-Sleeve Classic Jersey → Cycling Cap | Clothing | 2.19 → 2.13 | 2.40 | 1,246 → 1,246 | 8.99 / 2.07 | +129 / −50 / −229 | 7.5% / 20.7% |
-| Hydration Pack → Water Bottle | Accessories | 2.07 → 2.06 | 8.10 | 438 → 438 | 4.99 / 3.12 | +68 / −8 / −84 | 5.6% / 12.3% |
-| Bike Wash → Patch kit | Accessories | 2.06 → 2.26 | 7.27 | 620 → 620 | 2.29 / 1.43 | +44 / +9 / −26 | 3.9% / 8.5% |
-| Touring-1000 → Sport-100 | Bikes → Accessories | 1.59 → 1.44 | 0.88 | 697 → 697 | 34.99 / 21.90 | +763 / −244 / −1,252 | 6.7% / 14.8% |
+| Short-Sleeve Classic Jersey → Cycling Cap | Clothing | 2.19 → 2.13 | 2.95 (restricted) | 1,246 → 1,246 | 8.99 / 2.07 | +129 / −50 / −229 | 7.5% / 20.7% |
+| Hydration Pack → Water Bottle | Accessories | 2.07 → 2.06 | 3.86 (restricted) | 438 → 438 | 4.99 / 3.12 | +68 / −8 / −84 | 5.6% / 12.3% |
+| Bike Wash → Patch kit | Accessories | 2.06 → 2.26 | 3.47 (restricted) | 620 → 620 | 2.29 / 1.43 | +44 / +9 / −26 | 3.9% / 8.5% |
+| Touring-1000 → Sport-100 | Bikes → Accessories | 1.59 → 1.44 | 1.06 (restricted) | 697 → 697 | 34.99 / 21.90 | +763 / −244 / −1,252 | 6.7% / 14.8% |
 
 All nine rules are Under-promoted pairs. All hold in the 2014 test except Touring-1000 → Sport-100.
 
@@ -224,16 +226,16 @@ The lecturer asked for at least three use cases. Chosen for evidence and for var
 
 | # | Rule | Type of action | Net profit, no discount (5% conversion) | Why |
 |---|---|---|---|---|
-| 1 | Water Bottle → Hydration Pack | Accessory upsell | +6,735 | Largest value; stable lift (2.07 → 2.06); strong in both channels (reseller lift 8.10); large reach |
-| 2 | Cycling Cap → Short-Sleeve Classic Jersey | Clothing cross-sell | +967 | Second largest; holds in 2014; strong in both channels (reseller lift 2.40); thin margin, so no discount |
+| 1 | Water Bottle → Hydration Pack | Accessory upsell | +6,735 | Largest value; stable lift (2.07 → 2.06); strong in both channels (restricted reseller lift 3.86); large reach |
+| 2 | Cycling Cap → Short-Sleeve Classic Jersey | Clothing cross-sell | +967 | Second largest; holds in 2014; strong in both channels (restricted reseller lift 2.95); thin margin, so no discount |
 | 3 | Mountain Tire Tube → LL Mountain Tire | Maintenance complement | +680 (on a conservative reach) | Lift stable (3.84 → 4.13); a discount of 5% roughly breaks even (+33, break-even 4.7%) |
 | 4 (extra) | Road-750 → Road Bottle Cage | Bike with an accessory | +247 | Reach unaffected by the refinement; lift stable (5.10 → 4.96) |
-| Rejected | Touring-1000 → Sport-100 | Do not act | — | Lift falls from 1.59 to 1.44 in 2014, reverses for resellers (0.88); shows the validation stopping a weak promotion |
+| Rejected | Touring-1000 → Sport-100 | Do not act | — | Lift falls from 1.59 to 1.44 in 2014; for resellers it is near chance (1.06, restricted); shows the validation stopping a weak promotion |
 
 ### Use case 1: Water Bottle → Hydration Pack
 
 - **Offer:** a Hydration Pack (average revenue 54.99, margin 34.42) to customers who buy a water bottle but not a hydration pack.
-- **Evidence:** 284 orders already contain both, out of about 4,197 water-bottle orders (roughly 7%). Lift is 2.07 in training and 2.06 in 2014, so it is stable; the pair also appears in the reseller run (lift 8.10).
+- **Evidence:** 284 orders already contain both, out of about 4,197 water-bottle orders (roughly 7%). Lift is 2.07 in training and 2.06 in 2014, so it is stable; the pair also appears in the restricted reseller run (lift 3.86).
 - **Reach:** 3,913 orders; no alternatives to exclude.
 - **Sizing at 5% conversion:** +6,735 with no discount, +5,416 at a 5% discount and +4,097 at 10%. Break-even conversion is 0.6% at a 5% discount and 1.4% at 10%.
 - **Caution:** a 5% conversion would nearly double the current take-up (about 7%), so treat 5% as an optimistic case and read the 2% column beside it. The result stays positive in every scenario.
@@ -250,7 +252,7 @@ Break-even conversion: 0.6% at a 5% discount and 1.4% at 10%.
 ### Use case 2: Cycling Cap → Short-Sleeve Classic Jersey
 
 - **Offer:** a jersey (revenue 53.99, margin 12.42) to cap buyers.
-- **Evidence:** 336 orders contain both; lift 2.19 in training and 2.13 in 2014; the reseller lift is 2.40, so the pair is robust across channels.
+- **Evidence:** 336 orders contain both; lift 2.19 in training and 2.13 in 2014; the restricted reseller lift is 2.95, so the pair is robust across channels.
 - **Reach:** 1,829 orders, reduced to 1,557 (15% removed) after excluding customers who already hold another jersey (the Long-Sleeve Logo Jersey).
 - **Sizing:** the margin is only about 23%, so a discount quickly removes the profit.
 
@@ -286,58 +288,44 @@ Lift of 1.59 in training falls to 1.44 in 2014, below the 1.5 threshold, and res
 
 ---
 
-## 7. Reseller run: strongest rules by lift (Current)
+## 7. Reseller run: strongest rules by lift (Current, restricted)
 
-The top rules are forks and headsets across grades, with lift 25 to 37 and small counts (38 to 97 orders). HL Touring Handlebars with Touring Pedal (lift 25.1, 50 orders) is also in the top group.
+The restricted run's strongest reseller rules were not re-extracted in this document. Recompute them from the notebook (section 4 output or the stored rules) before quoting them. The earlier unrestricted top rules (forks and headsets, lift 25 to 37 on small counts) should not be quoted as current.
 
-| Pair | Support | Lift | Co-occurrence |
-|---|---|---|---|
-| LL Fork / LL Headset | 1.01% | 37.44 | 38 |
-| LL Fork / HL Headset | 1.89% | 29.26 | 71 |
-| HL Fork / ML Headset | 2.58% | 28.86 | 97 |
-| ML Headset / HL Headset | 2.39% | 28.24 | 90 |
-| HL Fork / HL Headset | 2.50% | 27.71 | 94 |
-| LL Fork / ML Headset | 1.75% | 27.44 | 66 |
-| LL Fork / HL Fork | 1.78% | 26.18 | 67 |
-
-Support here is relative to the 3,762 reseller orders, so it is not comparable with the individual run.
+Support is relative to the 1,795 reseller orders in the window, so it is not comparable with the individual run.
 
 ---
 
-## 8. Individual vs reseller comparison (Current)
+## 8. Individual vs reseller comparison (Current, both channels restricted)
 
 Notebook section 7. Counts are rules (both directions of each pair).
 
-| Group | Rules | Pairs |
-|---|---|---|
-| In both channels | 44 | 22 |
-| Individual only | 82 | 41 |
-| Reseller only | 2,792 | 1,396 |
+| Group | Rules |
+|---|---|
+| In both channels | 44 (22 pairs) |
+| Individual only | 82 |
+| Reseller only | 2,182 |
 
-Totals check: 44 + 82 = 126 individual rules; 44 + 2,792 = 2,836 reseller rules.
+Totals check: 44 + 82 = 126 individual rules; 44 + 2,182 = 2,226 reseller rules.
 
-**Pairs in both channels (lift individual / lift reseller)**
+**Reseller lifts for the use-case pairs (restricted base):**
 
-| Pair | Individual | Reseller | Reading |
+| Pair | Individual lift | Reseller lift (restricted) | Reseller lift (earlier, full base) |
 |---|---|---|---|
-| Bike Wash / Patch kit | 2.15 / 7.27 | Hidden gem / Hidden gem | Robust in both |
-| Water Bottle / Hydration Pack | 2.06 / 8.10 | Hidden gem / Bundle | Robust; stronger for resellers |
-| Road-750 / Water Bottle | 1.76 / 3.47 | Hidden gem / Hidden gem | Robust |
-| Short-Sleeve Classic Jersey / Cycling Cap | 2.16 / 2.40 | Hidden gem / Bundle | Robust |
-| Cycling Cap / Long-Sleeve Logo Jersey | 1.60 / 2.69 | Hidden gem / Bundle | Robust |
-| Water Bottle / Cycling Cap | 1.50 / 2.83 | Hidden gem / Bundle | Robust |
-| **Cycling Cap / Women's Mountain Shorts** | **2.22 / 0.99** | **Hidden gem / Alternatives** | Individuals buy together; resellers do not |
-| **Sport-100 / Touring-1000** | **1.51 / 0.88** | **Hidden gem / Alternatives** | Borderline for individuals; resellers below chance |
+| Water Bottle ↔ Hydration Pack | 2.06 | 3.86 | 8.10 (superseded) |
+| Patch kit ↔ Bike Wash | 2.15 | 3.47 | 7.27 (superseded) |
+| Cycling Cap ↔ Short-Sleeve Classic Jersey | 2.16 | 2.95 | 2.40 (superseded) |
+| Touring-1000 → Sport-100 | 1.51 | 1.06 | 0.88 |
 
-**Reading.** Most of the 22 shared pairs are strong in both channels, which makes them the most defensible candidates. Two pairs reverse: Cycling Cap with Women's Mountain Shorts looks like a consumer pattern, and resellers appear to buy those items separately. The reseller-only group (2,792 rules) remains far larger than the individual one, which supports keeping the reseller run as a comparison rather than a source of consumer offers. Tyre-and-tube pairs are not among the shared pairs at the 1% threshold, so the strongest individual rules are consumer-specific.
+The restriction lowered the two accessory pairs as predicted and raised the cap-and-jersey pair, which I'd verify before quoting. Touring-1000 → Sport-100 is now close to chance for resellers rather than below it.
 
-Support is relative to each channel's own orders, so compare lift, not support.
+**Reading.** The shared pairs (44 rules) are the robust candidates. The individual-only group is the consumer pattern. The reseller-only group is still far larger, which supports keeping the reseller run as a comparison rather than a source of consumer offers. Compare lift, not support, across channels.
 
 ---
 
 ## 9. Product-family check (Current)
 
-| Share of rules | Individual (126 rules) | Reseller (2,836 rules) |
+| Share of rules | Individual (126 rules) | Reseller (2,226 rules) |
 |---|---|---|
 | Same subcategory | 30.2% | 4.7% |
 | Same category | 60.3% | 32.1% |
@@ -429,7 +417,7 @@ The quarterly index and lift results were dominated by the 2013 launch of access
 - Cancelled orders are excluded from the warehouse (shipped-only load, provisional).
 - Seasonality and holidays are not modelled.
 - The time split is one split (training to 2013, test on the first half of 2014).
-- Reseller product launch dates were checked at category level (all four categories first sold to resellers on 2011-05-31) and at model level for the models in the use cases (first sales reported as 2011-05-31 and 2011-05-30, at the start of the data). The reseller base is therefore not diluted the way the individual base was. The warehouse's earliest order date is 2011-05-31, so confirm the 2011-05-30 value before quoting it; the conclusion does not depend on it.
+- Reseller product launch dates were checked at category level (all four categories first sold to resellers on 2011-05-31). At model level, the first reseller sales were: Cycling Cap and Long-Sleeve Logo Jersey on 2011-05-31; Water Bottle, Hydration Pack, Bike Wash, Patch kit and Short-Sleeve Classic Jersey on 2013-05-30 (last sale 2014-05-01 for all seven). **The reseller lifts for three use-case pairs were inflated by pre-launch orders in the full base (8.10, 7.27 and 2.40). The restricted base is now used for both channels, which gives 3.86, 3.47 and 2.95. The reseller "strong in both channels" claims are based on the restricted values.**
 
 ---
 
@@ -438,7 +426,7 @@ The quarterly index and lift results were dominated by the 2013 launch of access
 The mining stage is complete. Remaining items belong to the next stage.
 
 1. Write the use cases into the report using the structure in section 6b: rule, evidence, reach, sizing, action, caveat.
-2. Confirm the reseller model-level first-sale date reported as 2011-05-30 (the warehouse's earliest order date is 2011-05-31).
+2. Identify the use-case model whose reseller sales start on 2013-05-30, and rerun its reseller lift with `CHANNEL_START["Reseller"] = "2013-05-30"` as a sensitivity check. If the lift changes materially, restate the reseller figure in section 6a and in the report.
 3. Decide whether tyre and tube pairs are natural bundles or trivial rules for the report.
 4. Check the pattern definitions and cut-offs (lift 1.5, support 5%) with the lecturer.
 5. Build the Power BI pages on `rpt.AssociationRules` and the star schema: sales overview, basket page, rules page (slicers for channel, pattern, lift, confidence) and the use-case page with adjustable conversion and discount.
