@@ -84,7 +84,7 @@ The individual total rose from 106 to 126 after the launch correction, and Alter
 
 ## 4. Individual candidates: training vs test (Current)
 
-Candidates are rules chosen on the training period (2011 to 2013, from the launch date) that pass the cross-sell or discounted-bundle thresholds. Test = 2014, January to June.
+Candidates are rules chosen on the training period (2013-05-30 to 2013-12-31, the individual analysis window) that pass the cross-sell or discounted-bundle thresholds. Test = 2014, January to June.
 
 | Rule | Support | Confidence | Lift (train) | Orders with both (train) | Lift (test) | Holds |
 |---|---|---|---|---|---|---|
@@ -323,13 +323,13 @@ The restriction lowered the two accessory pairs as predicted and raised the cap-
 
 ---
 
-## 9. Product-family check (Current)
+## 9. Product-family check (Current, restricted base)
 
 | Share of rules | Individual (126 rules) | Reseller (2,226 rules) |
 |---|---|---|
-| Same subcategory | 30.2% | 4.7% |
-| Same category | 60.3% | 32.1% |
-| Both models still on sale | 100% | 68.3% |
+| Same subcategory | 30.2% | 3.8% |
+| Same category | 60.3% | 35.2% |
+| Both models still on sale | 100% | 100% |
 
 **Finding that still holds for the reseller side:** reseller rules are less often within one product family than individual rules, so the restocking-within-family explanation is not supported. The data does not show why the reseller associations exist.
 
@@ -365,7 +365,7 @@ Individual run on 22,008 orders. Rules are counted in both directions.
 
 *Caveat:* the stability columns measure which pairs pass each support filter. They do not test whether the rules are real. The time split in section 5 is that test.
 
-## 11. June 2014 check (Current)
+## 11. June 2014 check (Current, restricted base)
 
 Test period Jan to Jun 2014 against Jan to May 2014 (training unchanged).
 
