@@ -66,7 +66,7 @@ CompanyX_DW.etl          Watermark (replay clock), ReplayConfig, RunLog,
 | `dw.ProductDim` | one row per product price version | **SCD Type 2** on `ListPrice` and `StandardCost`; surrogate `ProductKey`; `EffectiveFrom`/`EffectiveTo`/`IsCurrent` | 353 (266 products) |
 | `dw.CustomerDim` | one row per customer | **SCD Type 1** (overwrite), with `InsertedDate` and `UpdatedDate` | 19,119 |
 | `dw.OrderLineFact` | one row per order line | Degenerate `SalesOrderID`; additive and non-additive measures kept apart | 120,147 |
-| `dw.AssociationRulesFact` | one row per discovered rule | Separate mart, logical link to `ProductDim` through `ProductModelID`; `Channel` column; five rule classifications | 0 (waiting for mining) |
+| `dw.AssociationRulesFact` | one row per discovered rule | Separate mart, logical link to `ProductDim` through `ProductModelID`; `Channel` column; five rule classifications | 2,352 (126 individual, 2,226 reseller) |
 
 Supporting objects:
 - Schemas: `staging`, `dw`, `etl`.
@@ -78,7 +78,7 @@ Supporting objects:
 - **Naming:** every table ends with its type (`DateDim`, `ProductDim`, `CustomerDim`, `OrderLineFact`, `AssociationRulesFact`).
 - **Mining grain:** Product Model (`ProductModelID`), not SKU. The warehouse stores model names on `ProductDim`.
 - **Rules table columns:** `AntecedentModelID`, `ConsequentModelID`, their names, `Support`, `Confidence`, `Lift`, `AntecedentSupport`, `ConsequentSupport`, `CoOccurrenceCount`, `RuleClassification` (`Bundle`, `Hidden gem`, `Chance`, `Substitute`, `Weak`), `Channel` (`Individual` or `Reseller`), `GeneratedDate`.
-- **Mining channels:** individual run is the main analysis, reseller run is a comparison; no pooled run. Single-model orders stay in the support denominator.
+- **Mining channels:** individual run is the main analysis, reseller run is a comparison; both use the window from 2013-05-30; no pooled run. Single-model orders stay in the support denominator.
 - **Load scope (provisional option A):** only shipped orders (`Status = 5`) are loaded, so there is no `Status` column in the fact table. The team keeps this open for further discussion.
 - **Customer load rule:** customers with `PersonID IS NOT NULL` (19,119). `StoreID IS NOT NULL` marks a Reseller.
 - **Anomalous lines** (null, zero or negative quantity or price) are 75 lines in six orders, 43677 to 43682. They stay in the fact table so revenue reconciles and are also logged in `etl.OrderLineAnomaly`; mining must use only lines with `OrderQty > 0 AND UnitPrice > 0`.
